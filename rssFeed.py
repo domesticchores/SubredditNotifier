@@ -59,17 +59,20 @@ class rssFeed:
                     a.find("title")
                     .text.find("$") : a.find("title")
                     .text.find(" ", a.find("title").text.find("$"))
-                ],
+                ]
+                or "$???",
                 "type": a.find("title").text[
                     a.find("title").text.find("[")
                     + 1 : a.find("title").text.find("]", a.find("title").text.find("["))
-                ],
+                ]
+                or "UNKNOWN",
                 "url": a.find("content").text[
                     a.find("content").text.find("<span><a href=")
                     + 15 : a.find("content").text.find(
                         '"', a.find("content").text.find("<span><a href=") + 15
                     )
                 ],
+                "redditlink": a.find("link").get("href"),
                 "pubdate": datetime.strptime(
                     a.find("published").text[:19], "%Y-%m-%dT%H:%M:%S"
                 ),
@@ -82,7 +85,8 @@ class rssFeed:
                 rssFeed.sendNotif(post)
             else:
                 print(
-                    "encountered post already stored, hit all new posts since last call!"
+                    "encountered post already stored, hit all new posts since last call! "
+                    + post.get("id")
                 )
                 break
         print(
@@ -119,6 +123,7 @@ class rssFeed:
     def sendNotif(Post):
         print("New post found! ID: " + Post.get("id"))
         linkTo = Post.get("url")
+        redTo = Post.get("redditlink")
         try:
             requests.post(
                 NTFY_URL,
@@ -139,7 +144,7 @@ class rssFeed:
                     + "]",
                     "Priority": "default",
                     "Tags": "computer",
-                    "Actions": f"view, Open Link, {linkTo}",
+                    "Actions": f"view, Product Link, {linkTo}; view, Post Link, {redTo}",
                 },
             )
         except Exception as e:
